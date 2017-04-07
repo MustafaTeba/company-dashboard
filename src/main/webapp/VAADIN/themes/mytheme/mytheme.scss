@@ -1,0 +1,29 @@
+// If you edit this file you need to compile the theme.
+// Global variable overrides. Must be declared before importing Valo.
+
+// For more information, see: https://vaadin.com/book/-/page/themes.valo.html
+// Example variants can be copy/pasted from https://vaadin.com/wiki/-/wiki/Main/Valo+Examples
+
+$v-font-size: 14px;
+
+$v-unit-size: 32px;
+$v-unit-size--small: 20px;
+$v-unit-size--tiny: 18px;
+
+$v-layout-margin-top: 18px;
+$v-layout-margin-right: 18px;
+$v-layout-margin-bottom: 18px;
+$v-layout-margin-left: 18px;
+$v-layout-spacing-vertical: 7px;
+$v-layout-spacing-horizontal: 6px;
+
+@import "../valo/valo.scss";
+
+@mixin mytheme {
+  @include valo;
+
+   /* To apply this style in Java, call setStyleName("blue") or addStyleName("blue") to a Panel component */
+  .v-panel-caption-blue {
+    @include valo-panel-caption-style($background-color: #363d40);
+  }
+}
