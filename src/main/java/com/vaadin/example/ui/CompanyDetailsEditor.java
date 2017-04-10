@@ -19,7 +19,6 @@ import com.vaadin.data.converter.StringToBigDecimalConverter;
 import com.vaadin.data.validator.BigDecimalRangeValidator;
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.theme.MyTheme;
-import com.vaadin.example.ui.Events.EventPayloadWrapper;
 import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
@@ -55,6 +54,18 @@ public class CompanyDetailsEditor extends Panel {
 		setStyleName(MyTheme.PANEL_BLUE);
 		setCaption("Company Details");
 		
+		// Create polar chart
+		chart = createChart();
+		chartSeries = createSeries(chart);
+
+		// Create form layout to edit company details
+		FormLayout formLayout = new FormLayout();
+		formLayout.setMargin(true);
+
+		// Create form fields and add them to form layout
+		// Because we are saving values to database every time when field value
+		// is changed, let's change the change event to occur when focus is lost
+		// from the field.
 		name = new TextField("Name:");
 		name.setReadOnly(true);
 		price = new TextField("Price:");
@@ -67,15 +78,11 @@ public class CompanyDetailsEditor extends Panel {
 		productPct.setValueChangeMode(ValueChangeMode.BLUR);
 		marketPct = new TextField("Market %:");
 		marketPct.setValueChangeMode(ValueChangeMode.BLUR);
-
-		content = new VerticalLayout();
-		content.setMargin(false);
-		FormLayout formLayout = new FormLayout();
-		formLayout.setMargin(true);
 		formLayout.addComponents(name, price, revenuePct, growthPct, productPct, marketPct);
 
-		chart = createChart();
-		chartSeries = createSeries(chart);
+		// Create editor content layout
+		content = new VerticalLayout();
+		content.setMargin(false);
 		content.addComponents(chart, formLayout);
 		content.setComponentAlignment(chart, Alignment.TOP_CENTER);
 		setContent(content);
@@ -99,7 +106,7 @@ public class CompanyDetailsEditor extends Panel {
 		binder.addValueChangeListener(event -> {
 			if (event.isUserOriginated()) {
 				drawChart(binder.getBean());
-				eventBus.publish(this, new EditEventPayloadWrapper(binder.getBean()));
+				eventBus.publish(this, new EditEvent(binder.getBean()));
 			}
 		});
 	}
@@ -125,26 +132,29 @@ public class CompanyDetailsEditor extends Panel {
 		conf.addPane(pane);
 		pane.setBackground(new Background[] {});
 
-		XAxis axis = new XAxis();
-		axis.setTickInterval(1);
-		axis.setMin(0);
-		axis.setMax(5);
-		axis.setTickmarkPlacement(TickmarkPlacement.ON);
-		axis.setGridLineWidth(1);
+		XAxis xaxis = new XAxis();
+		xaxis.setTickInterval(1);
+		xaxis.setMin(0);
+		xaxis.setMax(5);
+		xaxis.setTickmarkPlacement(TickmarkPlacement.ON);
+		xaxis.setGridLineWidth(1);
+
 		Labels labels = new Labels();
 		labels.setFormatter("function() {return this.value}");
-		axis.setLabels(labels);
-		YAxis yaxs = new YAxis();
-		yaxs.setMin(0);
-		yaxs.setMax(100);
-		yaxs.setTickInterval(20);
+		xaxis.setLabels(labels);
+
+		YAxis yaxis = new YAxis();
+		yaxis.setMin(0);
+		yaxis.setMax(100);
+		yaxis.setTickInterval(20);
 		conf.getLegend().setEnabled(false);
-		conf.addxAxis(axis);
-		conf.addyAxis(yaxs);
+		conf.addxAxis(xaxis);
+		conf.addyAxis(yaxis);
 		conf.getTooltip().setHeaderFormat("");
 		conf.getTooltip().setPointFormat("{point.category}: <b>{point.y}</b>");
 
-		axis.setCategories("Market %", "Price $", "Revenue %", "Growth %", "Product %");
+		// Instead of using numerical x values, let's use category strings
+		xaxis.setCategories("Market %", "Price $", "Revenue %", "Growth %", "Product %");
 
 		return chart;
 	}
@@ -163,8 +173,8 @@ public class CompanyDetailsEditor extends Panel {
 		chart.drawChart();
 	}
 
-	public static class EditEventPayloadWrapper extends EventPayloadWrapper<CompanyData> {
-		public EditEventPayloadWrapper(CompanyData data) {
+	public static class EditEvent extends CustomEvent<CompanyData> {
+		public EditEvent(CompanyData data) {
 			super(data);
 		}
 	}

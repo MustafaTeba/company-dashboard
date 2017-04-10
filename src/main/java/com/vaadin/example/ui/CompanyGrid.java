@@ -7,7 +7,6 @@ import org.vaadin.spring.events.EventBus;
 
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.theme.MyTheme;
-import com.vaadin.example.ui.Events.EventPayloadWrapper;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.Grid;
@@ -26,6 +25,8 @@ public class CompanyGrid extends Panel {
 		setStyleName(MyTheme.PANEL_BLUE);
 		setContent(grid);
 		grid.setSizeFull();
+		// Configure columns to set the display order, custom caption and to
+		// hide showing entity version and id.
 		grid.addColumn(CompanyData::getName).setCaption("Name");
 		grid.addColumn(CompanyData::getPrice).setCaption("Price $");
 		grid.addColumn(CompanyData::getRevenuePct).setCaption("Revenue %");
@@ -39,7 +40,7 @@ public class CompanyGrid extends Panel {
 		grid.setItems(items);
 		grid.addSelectionListener(
 				event -> eventBus.publish(this,
-						new SelectEventPayloadWrapper(event.getFirstSelectedItem().orElse(null))));
+						new SelectEvent(event.getFirstSelectedItem().orElse(null))));
 		if (items.size() > 0) {
 			grid.select(items.get(0));
 		}
@@ -49,9 +50,9 @@ public class CompanyGrid extends Panel {
 		grid.getDataProvider().refreshItem(item);
 	}
 
-	public class SelectEventPayloadWrapper extends EventPayloadWrapper<CompanyData> {
+	public class SelectEvent extends CustomEvent<CompanyData> {
 
-		public SelectEventPayloadWrapper(CompanyData payload) {
+		public SelectEvent(CompanyData payload) {
 			super(payload);
 		}
 

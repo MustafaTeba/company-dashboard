@@ -9,8 +9,8 @@ import org.vaadin.spring.events.annotation.EventBusListenerMethod;
 
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.backend.CompanyDataRepository;
-import com.vaadin.example.ui.CompanyDetailsEditor.EditEventPayloadWrapper;
-import com.vaadin.example.ui.CompanyGrid.SelectEventPayloadWrapper;
+import com.vaadin.example.ui.CompanyDetailsEditor.EditEvent;
+import com.vaadin.example.ui.CompanyGrid.SelectEvent;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.spring.annotation.SpringView;
@@ -61,7 +61,7 @@ public class CompanyDashboard extends VerticalLayout implements View {
 	}
 
 	@EventBusListenerMethod(scope = EventScope.UI)
-	public void onItemSelected(SelectEventPayloadWrapper event) {
+	public void onItemSelected(SelectEvent event) {
 		// Fetch latest from db
 		CompanyData data = repository.findOne(event.getPayload().getId());
 		grid.refresh(data);
@@ -69,7 +69,7 @@ public class CompanyDashboard extends VerticalLayout implements View {
 	}
 
 	@EventBusListenerMethod(scope = EventScope.UI)
-	public void onItemEdited(EditEventPayloadWrapper event) {
+	public void onItemEdited(EditEvent event) {
 		CompanyData saved = repository.saveAndFlush(event.getPayload());
 		grid.refresh(saved);
 		detailsEditor.setEditedItem(saved);
