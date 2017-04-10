@@ -1,6 +1,7 @@
 package com.vaadin.example.ui;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 import org.vaadin.spring.events.EventBus.UIEventBus;
 
@@ -19,6 +20,7 @@ import com.vaadin.data.converter.StringToBigDecimalConverter;
 import com.vaadin.data.validator.BigDecimalRangeValidator;
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.theme.MyTheme;
+import com.vaadin.example.ui.Events.EditEvent;
 import com.vaadin.shared.ui.ValueChangeMode;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
@@ -53,7 +55,7 @@ public class CompanyDetailsEditor extends Panel {
 		// Defined in mytheme.scss
 		setStyleName(MyTheme.PANEL_BLUE);
 		setCaption("Company Details");
-		
+
 		// Create polar chart
 		chart = createChart();
 		chartSeries = createSeries(chart);
@@ -125,6 +127,7 @@ public class CompanyDetailsEditor extends Panel {
 		chart.setHeight("300px");
 
 		Configuration conf = chart.getConfiguration();
+		conf.getChart().setAnimation(false);
 		conf.setTitle("");
 		conf.getChart().setPolar(true);
 
@@ -168,14 +171,23 @@ public class CompanyDetailsEditor extends Panel {
 	}
 
 	private void drawChart(CompanyData item) {
-		chartSeries.setData(item.getMarketPct(), item.getPrice(), item.getRevenuePct(), item.getGrowthPct(),
-				item.getProductPct());
-		chart.drawChart();
-	}
-
-	public static class EditEvent extends CustomEvent<CompanyData> {
-		public EditEvent(CompanyData data) {
-			super(data);
+		if (item != null) {
+			// To avoid having the animation of first draw, let's either create
+			// a new series or update a point
+			if (chartSeries.getData().length == 0) {
+				chartSeries.setData(item.getMarketPct(), item.getPrice(), item.getRevenuePct(), item.getGrowthPct(),
+						item.getProductPct());
+				chart.drawChart();
+			} else {
+				chartSeries.updatePoint(0, item.getMarketPct());
+				chartSeries.updatePoint(1, item.getPrice());
+				chartSeries.updatePoint(2, item.getRevenuePct());
+				chartSeries.updatePoint(3, item.getGrowthPct());
+				chartSeries.updatePoint(4, item.getProductPct());
+			}
+		} else {
+			chartSeries.setData(new ArrayList<>());
+			chart.drawChart();
 		}
 	}
 }

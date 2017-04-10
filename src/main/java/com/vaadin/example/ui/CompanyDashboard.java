@@ -7,10 +7,12 @@ import org.vaadin.spring.events.EventBus.UIEventBus;
 import org.vaadin.spring.events.EventScope;
 import org.vaadin.spring.events.annotation.EventBusListenerMethod;
 
+import com.vaadin.data.provider.CallbackDataProvider;
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.backend.CompanyDataRepository;
-import com.vaadin.example.ui.CompanyDetailsEditor.EditEvent;
-import com.vaadin.example.ui.CompanyGrid.SelectEvent;
+import com.vaadin.example.ui.Events.ChartSelectEvent;
+import com.vaadin.example.ui.Events.EditEvent;
+import com.vaadin.example.ui.Events.GridSelectEvent;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.spring.annotation.SpringView;
@@ -28,6 +30,7 @@ public class CompanyDashboard extends VerticalLayout implements View {
 	private final CompanyChart chart;
 	private final CompanyDetailsEditor detailsEditor;
 	private final CompanyGrid grid;
+	private CallbackDataProvider<CompanyData, String> dp;
 
 	@Autowired
 	public CompanyDashboard(CompanyDataRepository repository, UIEventBus eventBus, CompanyChart chart,
@@ -50,28 +53,45 @@ public class CompanyDashboard extends VerticalLayout implements View {
 		addComponentsAndExpand(bottom);
 		bottom.addComponentsAndExpand(grid);
 		bottom.addComponent(detailsEditor);
-
 	}
 
 	@Override
 	public void enter(ViewChangeEvent event) {
-		List<CompanyData> companyData = repository.findAll();
-		grid.setItems(companyData);
-		chart.setItems(companyData);
+		List<CompanyData> items = repository.findAll();
+		grid.setItems(items);
+		chart.setItems(items);
+		if (!items.isEmpty()) {
+			grid.select(items.get(0));
+		}
 	}
 
 	@EventBusListenerMethod(scope = EventScope.UI)
-	public void onItemSelected(SelectEvent event) {
+	public void onGridItemSelected(GridSelectEvent event) {
 		// Fetch latest from db
-		CompanyData data = repository.findOne(event.getPayload().getId());
+		CompanyData data = (event.getPayload() != null) ? repository.findOne(event.getPayload().getId()) : null;
 		grid.refresh(data);
+		chart.selectAndRefresh(data);
+		detailsEditor.setEditedItem(data);
+	}
+
+	@EventBusListenerMethod(scope = EventScope.UI)
+	public void onChartItemSelected(ChartSelectEvent event) {
+		// Fetch latest from db
+		CompanyData data = (event.getPayload() != null) ? repository.findOne(event.getPayload().getId()) : null;
+		grid.refresh(data);
+		chart.refresh(data);
+		grid.select(event.getPayload(), false);
 		detailsEditor.setEditedItem(data);
 	}
 
 	@EventBusListenerMethod(scope = EventScope.UI)
 	public void onItemEdited(EditEvent event) {
+		// CompanyDetailsEditor fired an event of updating a bean, let's store
+		// it and refresh chart and grid
 		CompanyData saved = repository.saveAndFlush(event.getPayload());
 		grid.refresh(saved);
+		chart.refresh(saved);
+		// We need to update the item back to editor after db save
 		detailsEditor.setEditedItem(saved);
 	}
 }

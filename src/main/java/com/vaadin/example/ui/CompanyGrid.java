@@ -1,12 +1,16 @@
 package com.vaadin.example.ui;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.spring.events.EventBus;
 
+import com.vaadin.event.selection.SelectionEvent;
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.theme.MyTheme;
+import com.vaadin.example.ui.Events.GridSelectEvent;
+import com.vaadin.shared.Registration;
 import com.vaadin.spring.annotation.SpringComponent;
 import com.vaadin.spring.annotation.ViewScope;
 import com.vaadin.ui.Grid;
@@ -18,6 +22,7 @@ public class CompanyGrid extends Panel {
 
 	private final Grid<CompanyData> grid = new Grid<>();
 	private final EventBus.UIEventBus eventBus;
+	private Optional<Registration> gridSelectListenerRegistration = Optional.empty();
 
 	@Autowired
 	public CompanyGrid(EventBus.UIEventBus eventBus) {
@@ -33,28 +38,45 @@ public class CompanyGrid extends Panel {
 		grid.addColumn(CompanyData::getGrowthPct).setCaption("Growth %");
 		grid.addColumn(CompanyData::getProductPct).setCaption("Product %");
 		grid.addColumn(CompanyData::getMarketPct).setCaption("Market %");
+		registerToSelectionEvent();
 		this.eventBus = eventBus;
 	}
 
 	public void setItems(List<CompanyData> items) {
 		grid.setItems(items);
-		grid.addSelectionListener(
-				event -> eventBus.publish(this,
-						new SelectEvent(event.getFirstSelectedItem().orElse(null))));
-		if (items.size() > 0) {
-			grid.select(items.get(0));
-		}
 	}
 
 	public void refresh(CompanyData item) {
-		grid.getDataProvider().refreshItem(item);
+		if (item != null) {
+			grid.getDataProvider().refreshItem(item);
+		}
 	}
 
-	public class SelectEvent extends CustomEvent<CompanyData> {
+	public void select(CompanyData item) {
+		select(item, true);
+	}
 
-		public SelectEvent(CompanyData payload) {
-			super(payload);
+	public void select(CompanyData item, boolean fireEvent) {
+		// To avoid circular events from grid and chart in CompanyDashboard,
+		// let's not necessarily fire events from row selection
+		if (!fireEvent) {
+			unregisterFromSelectionEvent();
 		}
+		grid.select(item);
+		registerToSelectionEvent();
+	}
 
+	private void onGridSelection(SelectionEvent<CompanyData> event) {
+		eventBus.publish(this, new GridSelectEvent(event.getFirstSelectedItem().orElse(null)));
+	}
+
+	private void unregisterFromSelectionEvent() {
+		gridSelectListenerRegistration.ifPresent(Registration::remove);
+		gridSelectListenerRegistration = Optional.empty();
+	}
+
+	private void registerToSelectionEvent() {
+		unregisterFromSelectionEvent();
+		gridSelectListenerRegistration = Optional.of(grid.addSelectionListener(this::onGridSelection));
 	}
 }
