@@ -7,7 +7,6 @@ import org.vaadin.spring.events.EventBus.UIEventBus;
 import org.vaadin.spring.events.EventScope;
 import org.vaadin.spring.events.annotation.EventBusListenerMethod;
 
-import com.vaadin.data.provider.CallbackDataProvider;
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.backend.CompanyDataRepository;
 import com.vaadin.example.ui.Events.ChartSelectEvent;
@@ -30,12 +29,10 @@ public class CompanyDashboard extends VerticalLayout implements View {
 	private final CompanyChart chart;
 	private final CompanyDetailsEditor detailsEditor;
 	private final CompanyGrid grid;
-	private CallbackDataProvider<CompanyData, String> dp;
 
 	@Autowired
 	public CompanyDashboard(CompanyDataRepository repository, UIEventBus eventBus, CompanyChart chart,
-			CompanyDetailsEditor detailsEditor,
-			CompanyGrid grid) {
+			CompanyDetailsEditor detailsEditor, CompanyGrid grid) {
 		this.repository = repository;
 		this.chart = chart;
 		this.detailsEditor = detailsEditor;
@@ -68,20 +65,15 @@ public class CompanyDashboard extends VerticalLayout implements View {
 	@EventBusListenerMethod(scope = EventScope.UI)
 	public void onGridItemSelected(GridSelectEvent event) {
 		// Fetch latest from db
-		CompanyData data = (event.getPayload() != null) ? repository.findOne(event.getPayload().getId()) : null;
-		grid.refresh(data);
-		chart.selectAndRefresh(data);
-		detailsEditor.setEditedItem(data);
+		CompanyData fresh = (event.getPayload() != null) ? repository.findOne(event.getPayload().getId()) : null;
+		refreshDataAndSelections(fresh);
 	}
 
 	@EventBusListenerMethod(scope = EventScope.UI)
 	public void onChartItemSelected(ChartSelectEvent event) {
 		// Fetch latest from db
-		CompanyData data = (event.getPayload() != null) ? repository.findOne(event.getPayload().getId()) : null;
-		grid.refresh(data);
-		chart.refresh(data);
-		grid.select(event.getPayload(), false);
-		detailsEditor.setEditedItem(data);
+		CompanyData fresh = (event.getPayload() != null) ? repository.findOne(event.getPayload().getId()) : null;
+		refreshDataAndSelections(fresh);
 	}
 
 	@EventBusListenerMethod(scope = EventScope.UI)
@@ -89,9 +81,14 @@ public class CompanyDashboard extends VerticalLayout implements View {
 		// CompanyDetailsEditor fired an event of updating a bean, let's store
 		// it and refresh chart and grid
 		CompanyData saved = repository.saveAndFlush(event.getPayload());
-		grid.refresh(saved);
-		chart.refresh(saved);
-		// We need to update the item back to editor after db save
-		detailsEditor.setEditedItem(saved);
+		refreshDataAndSelections(saved);
+	}
+
+	private void refreshDataAndSelections(CompanyData data) {
+		grid.refresh(data);
+		grid.select(data, false);
+		chart.refresh(data);
+		chart.select(data);
+		detailsEditor.setEditedItem(data);
 	}
 }

@@ -12,8 +12,7 @@ import com.vaadin.addon.charts.model.AxisType;
 import com.vaadin.addon.charts.model.ChartType;
 import com.vaadin.addon.charts.model.Configuration;
 import com.vaadin.addon.charts.model.DataLabels;
-import com.vaadin.addon.charts.model.DataSeries;
-import com.vaadin.addon.charts.model.DataSeriesItem;
+import com.vaadin.addon.charts.model.DataProviderSeries;
 import com.vaadin.addon.charts.model.HorizontalAlign;
 import com.vaadin.addon.charts.model.Labels;
 import com.vaadin.addon.charts.model.PlotOptionsColumn;
@@ -21,6 +20,7 @@ import com.vaadin.addon.charts.model.XAxis;
 import com.vaadin.addon.charts.model.YAxis;
 import com.vaadin.addon.charts.model.style.SolidColor;
 import com.vaadin.addon.charts.model.style.Style;
+import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.example.backend.CompanyData;
 import com.vaadin.example.theme.MyTheme;
 import com.vaadin.shared.Registration;
@@ -35,9 +35,9 @@ public class CompanyChart extends Panel {
 	private final Chart chart;
 	private final UIEventBus eventBus;
 	private List<CompanyData> items;
-	private DataSeries series;
+	private DataProviderSeries<CompanyData> series;
 	private Optional<Registration> pointSelectListenerRegistration = Optional.empty();
-	private Optional<CompanyData> oldSelection = Optional.empty();
+	private Optional<CompanyData> selection = Optional.empty();
 
 	public CompanyChart(UIEventBus eventBus) {
 		this.eventBus = eventBus;
@@ -52,50 +52,33 @@ public class CompanyChart extends Panel {
 
 	public void setItems(List<CompanyData> items) {
 		this.items = items;
-		this.series = new DataSeries();
-		items.stream().map(data -> {
-			DataSeriesItem item = new DataSeriesItem(data.getName(), data.getPrice());
-			item.setDataLabels(createLabel(data));
-			return item;
-		}).forEach(series::add);
+		series = new DataProviderSeries<>(new ListDataProvider<CompanyData>(items));
+		series.setY(CompanyData::getPrice);
+		series.setPointName(CompanyData::getName);
+		series.setProperty("dataLabels", this::createLabel);
+		series.setProperty("selected", this::checkSelectStatus);
 		chart.getConfiguration().setSeries(series);
 	}
 
-	public void selectAndRefresh(CompanyData item) {
-		oldSelection.ifPresent(this::deselect);
+	private Boolean checkSelectStatus(CompanyData item) {
+		return item.equals(selection.orElse(null));
+	}
+
+	public void refresh(CompanyData item) {
+		series.getDataProvider().refreshItem(item);
+	}
+
+	public void select(CompanyData item) {
+		selection.ifPresent(this::deselect);
 		if (item != null) {
-			refresh(item);
-			int index = items.indexOf(item);
-			if (index != -1) {
-				oldSelection = Optional.of(item);
-				DataSeriesItem updated = series.get(index);
-				updated.setSelected(true);
-				series.update(updated);
-			}
+			selection = Optional.of(item);
+			series.getDataProvider().refreshItem(item);
 		}
 	}
 
 	private void deselect(CompanyData item) {
-		int index = items.indexOf(item);
-		if (index != -1) {
-			DataSeriesItem updated = series.get(index);
-			updated.setSelected(false);
-			series.update(updated);
-		}
-	}
-
-	public void refresh(CompanyData item) {
-		// We are handling the data source a bit manually here, so the update
-		// code isn't that beautiful
-		if (item != null) {
-			int index = items.indexOf(item);
-			items.add(index, item);
-			items.remove(index + 1);
-			DataSeriesItem updated = series.get(index);
-			updated.setY(item.getPrice());
-			updated.setName(item.getName());
-			series.update(updated);
-		}
+		selection = Optional.empty();
+		series.getDataProvider().refreshItem(item);
 	}
 
 	private Chart createChart() {
@@ -131,7 +114,8 @@ public class CompanyChart extends Panel {
 	}
 
 	private void onPointSelect(PointSelectEvent event) {
-		eventBus.publish(this, new Events.ChartSelectEvent(items.get(event.getPointIndex())));
+		selection = Optional.of(items.get(event.getPointIndex()));
+		eventBus.publish(this, new Events.ChartSelectEvent(selection.get()));
 	}
 
 	private DataLabels createLabel(CompanyData data) {

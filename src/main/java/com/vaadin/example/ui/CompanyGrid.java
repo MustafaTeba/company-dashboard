@@ -47,9 +47,7 @@ public class CompanyGrid extends Panel {
 	}
 
 	public void refresh(CompanyData item) {
-		if (item != null) {
-			grid.getDataProvider().refreshItem(item);
-		}
+		grid.getDataProvider().refreshItem(item);
 	}
 
 	public void select(CompanyData item) {
