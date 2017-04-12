@@ -1,6 +1,7 @@
 package com.vaadin.example.ui;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,7 +66,10 @@ public class CompanyChart extends Panel {
 	}
 
 	public void refresh(CompanyData item) {
-		series.getDataProvider().refreshItem(item);
+		if (item != null) {
+			Collections.replaceAll(items, item, item);
+			series.getDataProvider().refreshItem(item);
+		}
 	}
 
 	public void select(CompanyData item) {
