@@ -53,7 +53,7 @@ public class CompanyDetailsEditor extends Panel {
 
 	public CompanyDetailsEditor(UIEventBus eventBus) {
 		// Defined in mytheme.scss
-		setStyleName(MyTheme.PANEL_BLUE);
+		setStyleName(MyTheme.PANEL_CAPTION_DARK);
 		setCaption("Company Details");
 
 		// Create polar chart

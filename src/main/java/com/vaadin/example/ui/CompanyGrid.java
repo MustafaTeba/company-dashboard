@@ -27,7 +27,7 @@ public class CompanyGrid extends Panel {
 	@Autowired
 	public CompanyGrid(EventBus.UIEventBus eventBus) {
 		setCaption("Company Data");
-		setStyleName(MyTheme.PANEL_BLUE);
+		setStyleName(MyTheme.PANEL_CAPTION_DARK);
 		setContent(grid);
 		grid.setSizeFull();
 		// Configure columns to set the display order, custom caption and to

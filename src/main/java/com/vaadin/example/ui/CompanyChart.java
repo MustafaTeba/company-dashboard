@@ -42,7 +42,7 @@ public class CompanyChart extends Panel {
 
 	public CompanyChart(UIEventBus eventBus) {
 		this.eventBus = eventBus;
-		setStyleName(MyTheme.PANEL_BLUE);
+		setStyleName(MyTheme.PANEL_CAPTION_DARK);
 		setCaption("Company Dashboard");
 
 		chart = createChart();

@@ -22,8 +22,8 @@ $v-layout-spacing-horizontal: 6px;
 @mixin mytheme {
   @include valo;
 
-   /* To apply this style in Java, call setStyleName("blue") or addStyleName("blue") to a Panel component */
-  .v-panel-caption-blue {
+   /* To apply this style in Java, call setStyleName("dark") or addStyleName("dark") to a Panel component */
+  .v-panel-caption-dark {
     @include valo-panel-caption-style($background-color: #363d40);
   }
 }
