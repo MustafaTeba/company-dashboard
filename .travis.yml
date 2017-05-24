@@ -1,3 +1,15 @@
+language: java
 jdk:
   - oraclejdk8
+before_install:
+ - export CHROME_BIN=/usr/bin/google-chrome-beta
+
+addons:
+  apt:
+    sources:
+     - google-chrome
+    packages:
+     - google-chrome-beta
+
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dvaadin.charts.developer.license=$CHARTS_LICENSE
 script: ./.travis.script.sh
