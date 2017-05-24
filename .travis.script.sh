@@ -7,5 +7,5 @@
 
 if [ "$TRAVIS_SECURE_ENV_VARS" == "true" ]
 then
-    mvn -B -e -V -Dvaadin.testbench.developer.license=$TESTBENCH_LICENSE -Dvaadin.charts.developer.license=$CHARTS_LICENSE clean verify
+    mvn -B -e -V -Dvaadin.testbench.developer.license=$TESTBENCH_LICENSE -Dvaadin.charts.developer.license=$CHARTS_LICENSE clean verify -P travis
 fi

@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.boot.context.embedded.LocalServerPort;
@@ -13,6 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
 
+import com.vaadin.testbench.TestBench;
 import com.vaadin.testbench.TestBenchTestCase;
 import com.vaadin.testbench.elements.TextFieldElement;
 
@@ -34,8 +36,8 @@ public class MyIT extends TestBenchTestCase {
                 Boolean.valueOf(headless))) {
             options.addArguments("headless");
         }
-        ChromeDriver driver =
-                new ChromeDriver(options);
+        WebDriver driver = TestBench.createDriver(
+                new ChromeDriver(options));
         setDriver(driver);
     }
 
