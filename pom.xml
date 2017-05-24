@@ -125,6 +125,7 @@
 				<configuration>
 					<systemPropertyVariables>
 						<webdriver.chrome.driver>${webdriver.chrome.driver}</webdriver.chrome.driver>
+						<headless>${headless}</headless>
 					</systemPropertyVariables>
 				</configuration>
 				<executions>
@@ -154,38 +155,14 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>com.github.webdriverextensions</groupId>
-				<artifactId>webdriverextensions-maven-plugin</artifactId>
-				<version>3.1.1</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>install-drivers</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<drivers>
-						<driver>
-							<name>edgedriver</name>
-							<version>3.14393</version>
-						</driver>
-						<driver>
-							<name>internetexplorerdriver</name>
-							<version>3.4.0</version>
-						</driver>
-						<driver>
-							<name>chromedriver</name>
-							<version>2.29</version>
-						</driver>
-						<driver>
-							<name>geckodriver</name>
-							<version>0.16.1</version>
-						</driver>
-					</drivers>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+		<id>travis</id>
+		<properties>
+			<headless>true</headless>
+		</properties>
+		</profile>
+	</profiles>
 </project>

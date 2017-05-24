@@ -43,7 +43,8 @@ public class MyIT extends TestBenchTestCase {
     public void test() {
         getDriver().get("http://localhost:" + port);
         String name = $(TextFieldElement.class)
-                .caption("Name:").first().getText();
+                .caption("Name:").first()
+                .getValue();
         assertEquals("3m Co", name);
     }
 
